@@ -1,308 +1,202 @@
 <!DOCTYPE html>
 <html>
-
-<head>
-    <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
-    <!--The viewport meta tag is used to improve the presentation and behavior of the samples 
-      on iOS devices-->
-    <meta name="viewport" content="initial-scale=1, maximum-scale=1,user-scalable=no">
-    <title>Catastro Hidalgo</title>
-
-    <link rel="stylesheet" href="http://js.arcgis.com/3.13/esri/css/esri.css">
-    <style>
+    <head>
+        <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+        <!--The viewport meta tag is used to improve the presentation and behavior of the samples
+        on iOS devices-->
+        <meta name="viewport" content="initial-scale=1, maximum-scale=1,user-scalable=no">
+        <title>Catastro Hidalgo</title>
+        <link rel="stylesheet" href="http://js.arcgis.com/3.13/esri/css/esri.css">
+        <style>
         @import "http://js.arcgis.com/3.13/dijit/themes/claro/claro.css";
         .zoominIcon {
-            background-image: url(images/nav_zoomin.png);
-            width: 16px;
-            height: 16px;
+        background-image: url(images/nav_zoomin.png);
+        width: 16px;
+        height: 16px;
         }
         .zoomoutIcon {
-            background-image: url(images/nav_zoomout.png);
-            width: 16px;
-            height: 16px;
+        background-image: url(images/nav_zoomout.png);
+        width: 16px;
+        height: 16px;
         }
         .zoomfullextIcon {
-            background-image: url(images/nav_fullextent.png);
-            width: 16px;
-            height: 16px;
+        background-image: url(images/nav_fullextent.png);
+        width: 16px;
+        height: 16px;
         }
         .zoomprevIcon {
-            background-image: url(images/nav_previous.png);
-            width: 16px;
-            height: 16px;
+        background-image: url(images/nav_previous.png);
+        width: 16px;
+        height: 16px;
         }
         .zoomnextIcon {
-            background-image: url(images/nav_next.png);
-            width: 16px;
-            height: 16px;
+        background-image: url(images/nav_next.png);
+        width: 16px;
+        height: 16px;
         }
         .panIcon {
-            background-image: url(images/nav_pan.png);
-            width: 16px;
-            height: 16px;
+        background-image: url(images/nav_pan.png);
+        width: 16px;
+        height: 16px;
         }
         .deactivateIcon {
-            background-image: url(images/nav_decline.png);
-            width: 16px;
-            height: 16px;
+        background-image: url(images/nav_decline.png);
+        width: 16px;
+        height: 16px;
         }
         .fullscreenIcon {
-            background-image: url(images/nav_fullscreen.png);
-            width: 16px;
-            height: 16px;
+        background-image: url(images/nav_fullscreen.png);
+        width: 16px;
+        height: 16px;
         }
         .searchIcon {
-            background-image: url(images/nav_search.png);
-            width: 16px;
-            height: 16px;
+        background-image: url(images/nav_search.png);
+        width: 16px;
+        height: 16px;
         }
         body,
         html {
-            color:#244434;
-            height: 100%;
+        color:#244434;
+        height: 100%;
         }
-    </style>
-
-    <script src="http://js.arcgis.com/3.13/"></script>
-    <script>
+        </style>
+        <script src="http://js.arcgis.com/3.13/"></script>
+        <script>
         var map;
-
+        var servicelist =[];
         require([
-                "esri/map",
-                "esri/layers/ArcGISTiledMapServiceLayer",
-                "esri/toolbars/navigation",
-                "dojo/on",
-                "dojo/parser",
-                "dijit/registry",
-                "dijit/Toolbar",
-                "dijit/form/Button",
-                "dojo/domReady!"
-            ],
-            function(Map, Tiled, Navigation, on, parser, registry ) {
-
-                parser.parse();
-
-                var navToolbar;
-
-                map = new Map("map", {
-                    basemap: "topo",
-                    center: [-98.9243422, 20.4972412],
-                    zoom: 8,
-
-                });
-
-                var _0 = new Tiled("http://65.183.45.194:6080/arcgis/rest/services/DEMOS/Escala1K_Actopan/MapServer");
-                map.addLayer(_0);
-                
-
-                // http://65.183.45.194:6080/arcgis/rest/services/PMX_20MUNICIPIOS_TEST/20municipiosClasificacionEtapas_Test/MapServer
-
-
-
-
-
-                navToolbar = new Navigation(map);
-                on(navToolbar, "onExtentHistoryChange", extentHistoryChangeHandler);
-
-                registry.byId("zoomin").on("click", function() {
-                    navToolbar.activate(Navigation.ZOOM_IN);
-                });
-
-                registry.byId("zoomout").on("click", function() {
-                    navToolbar.activate(Navigation.ZOOM_OUT);
-                });
-
-                registry.byId("zoomfullext").on("click", function() {
-                //    navToolbar.zoomToFullExtent();
-                    zoomToCustomExtent();
-                });
-
-                registry.byId("zoomprev").on("click", function() {
-                    navToolbar.zoomToPrevExtent();
-                });
-
-                registry.byId("zoomnext").on("click", function() {
-                    navToolbar.zoomToNextExtent();
-                });
-
-                registry.byId("pan").on("click", function() {
-                    navToolbar.activate(Navigation.PAN);
-                });
-
-                registry.byId("deactivate").on("click", function() {
-                    navToolbar.deactivate();
-                });
-                registry.byId("fullscreen").on("click", function() {
-                    toggleFullScreen();
-                });
-
-                // dojo.connect(municipioselect, 'onChange', zoomToMunicipio);
-                function extentHistoryChangeHandler() {
-                    registry.byId("zoomprev").disabled = navToolbar.isFirstExtent();
-                    registry.byId("zoomnext").disabled = navToolbar.isLastExtent();
-                }
-            function zoomToCustomExtent()	{
-				var customExtentAndSR = new esri.geometry.Extent(-100.789793409,19.552480824,-97.25483487,21.337058838,new esri.SpatialReference({"wkid":4326}));
-				map.setExtent(customExtentAndSR);
-		}
-
-
-
- dijit.byId("btn_zoom_mpio"), "click", function (e) {
-        alert("My button was clicked!");
-    };
-
-
-
-            });
-
-
-
-
-         
-
-
-
-
-        function toggleFullScreen() {
-            if (!document.fullscreenElement && // alternative standard method
-                !document.mozFullScreenElement && !document.webkitFullscreenElement && !document.msFullscreenElement) { // current working methods
-                if (document.documentElement.requestFullscreen) {
-                    document.documentElement.requestFullscreen();
-                } else if (document.documentElement.msRequestFullscreen) {
-                    document.documentElement.msRequestFullscreen();
-                } else if (document.documentElement.mozRequestFullScreen) {
-                    document.documentElement.mozRequestFullScreen();
-                } else if (document.documentElement.webkitRequestFullscreen) {
-                    document.documentElement.webkitRequestFullscreen(Element.ALLOW_KEYBOARD_INPUT);
-                }
-            } else {
-                if (document.exitFullscreen) {
-                    document.exitFullscreen();
-                } else if (document.msExitFullscreen) {
-                    document.msExitFullscreen();
-                } else if (document.mozCancelFullScreen) {
-                    document.mozCancelFullScreen();
-                } else if (document.webkitExitFullscreen) {
-                    document.webkitExitFullscreen();
-                }
-            }
+        "esri/map",
+        "esri/layers/ArcGISTiledMapServiceLayer",
+        "esri/toolbars/navigation",
+        "dojo/on",
+        "dojo/parser",
+        "dijit/registry",
+        "dijit/Toolbar",
+        "dijit/form/Button",
+        "dojo/dom" ,
+        "dojo/store/Memory",
+        "dijit/form/Select",
+        "dijit/form/FilteringSelect",
+        "dojo/json",
+        "dojo/domReady!"
+        ],
+        function(Map, Tiled, Navigation, on, parser, registry ,Button,Memory,FilteringSelect,json,dom) {
+        parser.parse();
+        var navToolbar;
+        map = new Map("map", {
+        basemap: "topo",
+        center: [-98.9243422, 20.4972412],
+        zoom: 8,
+        nav:false,
+        });
+        //Aquí se agregan las url de los servicios a mostrar.
+        // Ejemplo:   servicelist.push(new Tiled( url="Dirección del servicio de mapa", {id:"Nombre del servicio"} ));
+        servicelist.push(new Tiled( url="http://65.183.45.194:6080/arcgis/rest/services/DEMOS/Escala1K_Actopan/MapServer", {id:"Actopan"} ));
+        servicelist.push(new Tiled( url="http://65.183.45.194:6080/arcgis/rest/services/DEMOS/PEMEX_Ductos_PMX/MapServer", {id:"ductos"} ));
+        servicelist.push(new Tiled( url="http://65.183.45.194:6080/arcgis/rest/services/DEMOS/Poblacion_DF/MapServer", {id:"DF"} ));
+        
+        
+        var optionData= {};
+        var _data =[];
+        var _index=0;
+        dojo.forEach(servicelist, function(entry, i){
+        _data.push({id:_index++, name:entry.id})
+        
+        map.addLayer(entry);
+        });
+        
+        optionData = {data:_data};
+        var str = new dojo.store.Memory(optionData);
+        dijit.byId('municipioselectCombo').set('store',str);
+        
+        dijit.byId('btn_zoom_mpio').on("click", function() {
+        map.setExtent(servicelist[ dijit.byId('municipioselectCombo').get('value')].initialExtent);
+        });
+        navToolbar = new Navigation(map);
+        on(navToolbar, "onExtentHistoryChange", extentHistoryChangeHandler);
+        registry.byId("zoomin").on("click", function() {
+        navToolbar.activate(Navigation.ZOOM_IN);
+        });
+        registry.byId("zoomout").on("click", function() {
+        navToolbar.activate(Navigation.ZOOM_OUT);
+        });
+        registry.byId("zoomfullext").on("click", function() {
+        
+        zoomToCustomExtent();
+        });
+        registry.byId("zoomprev").on("click", function() {
+        navToolbar.zoomToPrevExtent();
+        });
+        registry.byId("zoomnext").on("click", function() {
+        navToolbar.zoomToNextExtent();
+        });
+        registry.byId("pan").on("click", function() {
+        navToolbar.activate(Navigation.PAN);
+        });
+        registry.byId("deactivate").on("click", function() {
+        navToolbar.deactivate();
+        });
+        registry.byId("fullscreen").on("click", function() {
+        toggleFullScreen();
+        });
+        function extentHistoryChangeHandler() {
+        registry.byId("zoomprev").disabled = navToolbar.isFirstExtent();
+        registry.byId("zoomnext").disabled = navToolbar.isLastExtent();
         }
-    </script>
-</head>
-
-<body class="claro">
-    <div id="navToolbar" data-dojo-type="dijit/Toolbar">
-        <div data-dojo-type="dijit/form/Button" id="zoomin" data-dojo-props="iconClass:'zoominIcon'"></div>
-        <div data-dojo-type="dijit/form/Button" id="zoomout" data-dojo-props="iconClass:'zoomoutIcon'"></div>
-        <div data-dojo-type="dijit/form/Button" id="zoomfullext" data-dojo-props="iconClass:'zoomfullextIcon'"></div>
-        <div data-dojo-type="dijit/form/Button" id="zoomprev" data-dojo-props="iconClass:'zoomprevIcon'"></div>
-        <div data-dojo-type="dijit/form/Button" id="zoomnext" data-dojo-props="iconClass:'zoomnextIcon'"></div>
-        <div data-dojo-type="dijit/form/Button" id="pan" data-dojo-props="iconClass:'panIcon'"></div>
-        <div data-dojo-type="dijit/form/Button" id="deactivate" data-dojo-props="iconClass:'deactivateIcon'"></div>
-        <div data-dojo-type="dijit/form/Button" id="fullscreen" data-dojo-props="iconClass:'fullscreenIcon'"></div>
-
-
-        <div data-dojo-type="dijit/form/DropDownButton" data-dojo-props="iconClass:'dijitEditorIcon searchIcon', showLabel:true">
-            <span>Municipio</span>
-            <div data-dojo-type="dijit/TooltipDialog">
-                <select data-dojo-type="dijit/form/FilteringSelect" id="municipioselect" name="municipioselect">
-<!--
-                    <option value="0">Acatlán</option>
-                    <option value="0">Acaxochitlán</option>
--->
-                    <option value="0">Actopan</option>
-<!--
-                    <option value="0">Agua Blanca de Iturbide</option>
-                    <option value="0">Ajacuba</option>
-                    <option value="0">Alfajayucan</option>
-                    <option value="0">Almoloya</option>
-                    <option value="0">Apan</option>
-                    <option value="0">El Arenal</option>
-                    <option value="0">Atitalaquia</option>
-                    <option value="0">Atlapexco</option>
-                    <option value="0">Atotonilco el Grande</option>
-                    <option value="0">Atotonilco de Tula</option>
-                    <option value="0">Calnali</option>
-                    <option value="0">Cardonal</option>
-                    <option value="0">Cuautepec de Hinojosa</option>
-                    <option value="0">Chapantongo</option>
-                    <option value="0">Chapulhuacán</option>
-                    <option value="0">Chilcuautla</option>
-                    <option value="0">Eloxochitlán</option>
-                    <option value="0">Emiliano Zapata</option>
-                    <option value="0">Epazoyucan</option>
-                    <option value="0">Franciso I. Madero</option>
-                    <option value="0">Huasca de Ocampo</option>
-                    <option value="0">Huautla</option>
-                    <option value="0">Huazalingo</option>
-                    <option value="0">Huehuetla</option>
-                    <option value="0">Huejutla de Reyes</option>
-                    <option value="0">Huichapan</option>
-                    <option value="0">Ixmiquilpan</option>
-                    <option value="0">Jacala de Ledezma</option>
-                    <option value="0">Jaltocán</option>
-                    <option value="0">Juárez Hidalgo</option>
-                    <option value="0">Lolotla</option>
-                    <option value="0">Metepec</option>
-                    <option value="0">San Agustín Metzquititlán</option>
-                    <option value="0">Metztitlán</option>
-                    <option value="0">Mineral del Chico</option>
-                    <option value="0">Mineral del Monte</option>
-                    <option value="0">La Misión</option>
-                    <option value="0">Mixquiahuala de Juárez</option>
-                    <option value="0">Molango de Escamilla</option>
-                    <option value="0">Nicolás Flores</option>
-                    <option value="0">Nopala de Villagrán</option>
-                    <option value="0">Omitlán de Juárez</option>
-                    <option value="0">San Felipe Orizatlán</option>
-                    <option value="0">Pacula</option>
-                    <option value="0">Pachuca de Soto</option>
-                    <option value="0">Pisaflores</option>
-                    <option value="0">Progreso de Obregón</option>
-                    <option value="0">Mineral de la Reforma</option>
-                    <option value="0">San Agustín Tlaxiaca</option>
-                    <option value="0">San Bartolo Tutotepec</option>
-                    <option value="0">San Salvador</option>
-                    <option value="0">Santiago de Anaya</option>
-                    <option value="0">Santiago Tulantepec de Lugo Guerrero</option>
-                    <option value="0">Singuilucan</option>
-                    <option value="0">Tasquillo</option>
-                    <option value="0">Tecozautla</option>
-                    <option value="0">Tenango de Doria</option>
-                    <option value="0">Tepeapulco</option>
-                    <option value="0">Tepehuacán de Guerrero</option>
-                    <option value="0">Tepeji del Río de Ocampo</option>
-                    <option value="0">Tepetitlán</option>
-                    <option value="0">Tetepango</option>
-                    <option value="0">Villa de Tezontepec</option>
-                    <option value="0">Tezontepec de Aldama</option>
-                    <option value="0">Tianguistengo</option>
-                    <option value="0">Tizayuca</option>
-                    <option value="0">Tlahuelilpan</option>
-                    <option value="0">Tlahuiltepa</option>
-                    <option value="0">Tlanalapa</option>
-                    <option value="0">Tlanchinol</option>
-                    <option value="0">Tlaxcoapan</option>
-                    <option value="0">Tolcayuca</option>
-                    <option value="0">Tula de Allende</option>
-                    <option value="0">Tulancingo de Bravo</option>
-                    <option value="0">Xochiatipan</option>
-                    <option value="0">Xochicoatlán</option>
-                    <option value="0">Yahualica</option>
-                    <option value="0">Zacualtipán</option>
-                    <option value="0">Zapotlán de Juárez</option>
-                    <option value="0">Zempoala</option>
-                    <option value="0">Zimapán</option>
--->
-                    <option value="0"></option>
-                </select>
-                <button data-dojo-type="dijit/form/Button" data-dojo-id="btn_zoom_mpio"   type="button">Acercar</button>
+        function zoomToCustomExtent()   {
+        var customExtentAndSR = new esri.geometry.Extent(-100.789793409,19.552480824,-97.25483487,21.337058838,new esri.SpatialReference({"wkid":4326}));
+        map.setExtent(customExtentAndSR);
+        }
+        });
+        
+        function toggleFullScreen() {
+        if (!document.fullscreenElement && // alternative standard method
+        !document.mozFullScreenElement && !document.webkitFullscreenElement && !document.msFullscreenElement) { // current working methods
+        if (document.documentElement.requestFullscreen) {
+        document.documentElement.requestFullscreen();
+        } else if (document.documentElement.msRequestFullscreen) {
+        document.documentElement.msRequestFullscreen();
+        } else if (document.documentElement.mozRequestFullScreen) {
+        document.documentElement.mozRequestFullScreen();
+        } else if (document.documentElement.webkitRequestFullscreen) {
+        document.documentElement.webkitRequestFullscreen(Element.ALLOW_KEYBOARD_INPUT);
+        }
+        } else {
+        if (document.exitFullscreen) {
+        document.exitFullscreen();
+        } else if (document.msExitFullscreen) {
+        document.msExitFullscreen();
+        } else if (document.mozCancelFullScreen) {
+        document.mozCancelFullScreen();
+        } else if (document.webkitExitFullscreen) {
+        document.webkitExitFullscreen();
+        }
+        }
+        }
+        </script>
+    </head>
+    <body class="claro">
+        <div id="navToolbar" data-dojo-type="dijit/Toolbar">
+            <div data-dojo-type="dijit/form/Button" id="zoomin" data-dojo-props="iconClass:'zoominIcon'"></div>
+            <div data-dojo-type="dijit/form/Button" id="zoomout" data-dojo-props="iconClass:'zoomoutIcon'"></div>
+            <div data-dojo-type="dijit/form/Button" id="zoomfullext" data-dojo-props="iconClass:'zoomfullextIcon'"></div>
+            <div data-dojo-type="dijit/form/Button" id="zoomprev" data-dojo-props="iconClass:'zoomprevIcon'"></div>
+            <div data-dojo-type="dijit/form/Button" id="zoomnext" data-dojo-props="iconClass:'zoomnextIcon'"></div>
+            <div data-dojo-type="dijit/form/Button" id="pan" data-dojo-props="iconClass:'panIcon'"></div>
+            <div data-dojo-type="dijit/form/Button" id="deactivate" data-dojo-props="iconClass:'deactivateIcon'"></div>
+            <div data-dojo-type="dijit/form/Button" id="fullscreen" data-dojo-props="iconClass:'fullscreenIcon'"></div>
+            <div data-dojo-type="dijit/form/DropDownButton" data-dojo-props="iconClass:'dijitEditorIcon searchIcon', showLabel:true">
+                <span>Municipio</span>
+                <div data-dojo-type="dijit/TooltipDialog">
+                    
+                    <select  data-dojo-type="dijit/form/FilteringSelect" id="municipioselectCombo" >
+                    </select>
+                    
+                    <button data-dojo-type="dijit/form/Button" id="btn_zoom_mpio">Acercar</button>
+                </div>
             </div>
         </div>
-    </div>
-
-    <div id="map" style="height:100%"></div>
-</body>
-
+        
+        <div id="map" style="height:100%"></div>
+    </body>
 </html>
